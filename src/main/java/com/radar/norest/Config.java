@@ -1,51 +1,94 @@
 package com.radar.norest;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-// An example config class. This is not required, but it's a good idea to have one to keep your config organized.
-// Demonstrates how to use Forge's config APIs
-@Mod.EventBusSubscriber(modid = Norest.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(modid = NoRest.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
+
+    public static final ForgeConfigSpec SPEC;
+    // General settings
+    public static final ForgeConfigSpec.BooleanValue ENABLE_DAYLIGHT_SPAWNING;
+    // Spawn settings
+    public static final ForgeConfigSpec.DoubleValue DAYLIGHT_SPAWN_CHANCE;
+    public static final ForgeConfigSpec.IntValue MAX_SPAWN_LIGHT_LEVEL;
+    // Spawn rate settings
+    public static final ForgeConfigSpec.IntValue MAX_DAYLIGHT_ZOMBIES;
+    public static final ForgeConfigSpec.IntValue SPAWN_COOLDOWN_SECONDS;
+
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
-    private static final ForgeConfigSpec.BooleanValue LOG_DIRT_BLOCK = BUILDER.comment("Whether to log the dirt block on common setup").define("logDirtBlock", true);
+    static {
+        BUILDER.comment("Daylight Zombies Configuration");
+        BUILDER.push("general");
 
-    private static final ForgeConfigSpec.IntValue MAGIC_NUMBER = BUILDER.comment("A magic number").defineInRange("magicNumber", 42, 0, Integer.MAX_VALUE);
+        ENABLE_DAYLIGHT_SPAWNING = BUILDER
+                .comment("Enable zombies to spawn during daylight hours")
+                .define("enableDaylightSpawning", true);
 
-    public static final ForgeConfigSpec.ConfigValue<String> MAGIC_NUMBER_INTRODUCTION = BUILDER.comment("What you want the introduction message to be for the magic number").define("magicNumberIntroduction", "The magic number is... ");
+        BUILDER.pop();
 
-    // a list of strings that are treated as resource locations for items
-    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> ITEM_STRINGS = BUILDER.comment("A list of items to log on common setup.").defineListAllowEmpty("items", List.of("minecraft:iron_ingot"), Config::validateItemName);
+        BUILDER.push("spawning");
 
-    static final ForgeConfigSpec SPEC = BUILDER.build();
+        DAYLIGHT_SPAWN_CHANCE = BUILDER
+                .comment("Chance multiplier for zombies to spawn in daylight (0.0-1.0), doesn't do much so I wouldn't touch it.")
+                .defineInRange("daylightSpawnChance", 0.5, 0.0, 1.0);
 
-    public static boolean logDirtBlock;
-    public static int magicNumber;
-    public static String magicNumberIntroduction;
-    public static Set<Item> items;
+        MAX_SPAWN_LIGHT_LEVEL = BUILDER
+                .comment("Maximum light level where zombies can spawn.")
+                .defineInRange("maxSpawnLightLevel", 15, 0, 15);
 
-    private static boolean validateItemName(final Object obj) {
-        return obj instanceof final String itemName && ForgeRegistries.ITEMS.containsKey(new ResourceLocation(itemName));
+        MAX_DAYLIGHT_ZOMBIES = BUILDER
+                .comment("Maximum number of zombies that can spawn during daylight, the max is weird because we are doing spawning via how normal spawns work.")
+                .defineInRange("maxDaylightZombies", 30, 0, 100);
+
+        SPAWN_COOLDOWN_SECONDS = BUILDER
+                .comment("Cooldown in seconds between zombie spawn attempts, keep this high so that you don't get constant spawning, think flat world in minecraft with slimes.")
+                .defineInRange("spawnCooldownSeconds", 10, 0, 3600);
+
+        BUILDER.pop();
+
+        SPEC = BUILDER.build();
     }
 
-    @SubscribeEvent
-    static void onLoad(final ModConfigEvent event) {
-        logDirtBlock = LOG_DIRT_BLOCK.get();
-        magicNumber = MAGIC_NUMBER.get();
-        magicNumberIntroduction = MAGIC_NUMBER_INTRODUCTION.get();
+    // there has to be a better way for this, i hate this so much...
+    public static boolean isDaylightSpawningEnabled() {
+        try {
+            return ENABLE_DAYLIGHT_SPAWNING.get();
+        } catch (IllegalStateException e) {
+            return true;
+        }
+    }
 
-        // convert the list of strings into a set of items
-        items = ITEM_STRINGS.get().stream().map(itemName -> ForgeRegistries.ITEMS.getValue(new ResourceLocation(itemName))).collect(Collectors.toSet());
+    public static double getDaylightSpawnChance() {
+        try {
+            return DAYLIGHT_SPAWN_CHANCE.get();
+        } catch (IllegalStateException e) {
+            return 0.5;
+        }
+    }
+
+    public static int getMaxSpawnLightLevel() {
+        try {
+            return MAX_SPAWN_LIGHT_LEVEL.get();
+        } catch (IllegalStateException e) {
+            return 15;
+        }
+    }
+
+    public static int getMaxDaylightZombies() {
+        try {
+            return MAX_DAYLIGHT_ZOMBIES.get();
+        } catch (IllegalStateException e) {
+            return 30;
+        }
+    }
+
+    public static int getSpawnCooldownSeconds() {
+        try {
+            return SPAWN_COOLDOWN_SECONDS.get();
+        } catch (IllegalStateException e) {
+            return 10;
+        }
     }
 }

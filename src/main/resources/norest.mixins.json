@@ -1,10 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.radar.norest.mixin",
+  "package": "com.radar.norest.mixins",
   "compatibilityLevel": "JAVA_8",
   "refmap": "norest.refmap.json",
+  "plugin": "com.radar.norest.compat.NoRestZombieMixinPlugin",
   "mixins": [
+    "ZombieSunImmunityMixin"
   ],
   "client": [
   ],

@@ -1,5 +1,8 @@
-package com.radar.norest;
+package com.radar.norest.events;
 
+import com.radar.norest.util.CommandManager;
+import com.radar.norest.Config;
+import com.radar.norest.util.ZombieManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Zombie;
@@ -16,9 +19,6 @@ import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Handles Forge game events
- */
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEventBus {
     private static final Logger LOGGER = LoggerFactory.getLogger(ForgeEventBus.class);
@@ -33,7 +33,6 @@ public class ForgeEventBus {
             boolean isDaylight = skyLight >= 8;
             
             if (isDaylight) {
-                // Handle daylight spawning with rate limits
                 boolean canSpawn = ZombieManager.canSpawnMoreZombies(level);
                 if (canSpawn) {
                     Zombie zombie = (Zombie) event.getEntity();
@@ -41,12 +40,10 @@ public class ForgeEventBus {
                     event.setResult(Event.Result.ALLOW);
                     LOGGER.debug("Allowing zombie spawn in daylight (within limits)");
                 } else {
-                    // Explicitly DENY when at cap or in cooldown
                     event.setResult(Event.Result.DENY);
                     LOGGER.debug("Denied zombie spawn due to rate limits or cooldown");
                 }
             } else {
-                // Normal night spawning rules
                 event.setResult(Event.Result.DEFAULT);
             }
         }
@@ -54,10 +51,8 @@ public class ForgeEventBus {
 
     @SubscribeEvent
     public static void onEntityDeath(LivingDeathEvent event) {
-        // Only process deaths on the server side to avoid double counting
-        if (event.getEntity() instanceof Zombie && !event.getEntity().level().isClientSide()) {
+        if (event.getEntity() instanceof Zombie zombie && !event.getEntity().level().isClientSide()) {
             LOGGER.debug("Processing zombie death on server side");
-            Zombie zombie = (Zombie) event.getEntity();
             if (zombie.getTags().contains("day") && event.getEntity().level() instanceof ServerLevel serverLevel) {
                 ZombieManager.onZombieDeath(serverLevel);
             }
@@ -66,7 +61,6 @@ public class ForgeEventBus {
 
     @SubscribeEvent
     public static void onEntitySpawn(MobSpawnEvent.FinalizeSpawn event) {
-        // Only process spawns on the server side
         if (event.getEntity() instanceof Zombie && !event.getEntity().level().isClientSide()) {
             LOGGER.debug("Processing zombie spawn on server side");
             if (event.getEntity().getTags().contains("day") && event.getEntity().level() instanceof ServerLevel serverLevel) {
