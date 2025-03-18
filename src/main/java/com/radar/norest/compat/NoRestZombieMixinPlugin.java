@@ -10,10 +10,10 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 import java.util.List;
 import java.util.Set;
 
-//TODO I don't think I needed this file tbh.
+//TODO I don't think I needed this file tbh... I'm keeping it though...
 public class NoRestZombieMixinPlugin implements IMixinConfigPlugin {
 
-    private Logger LOGGER = LoggerFactory.getLogger(NoRestZombieMixinPlugin.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(NoRestZombieMixinPlugin.class);
 
     private static final String[] CONFLICTING_MODS = {
             "hordes",

@@ -58,7 +58,7 @@ public class ZombieManager {
         
         ZombieData data = ZombieData.get(serverLevel);
         int currentCount = data.getZombieCount();
-        int maxZombies = Config.getMaxDaylightZombies();
+        int maxZombies = Config.getMinDaylightZombies();
 
         LOGGER.debug("Current zombie count: {}/{}", currentCount, maxZombies);
         
@@ -109,7 +109,7 @@ public class ZombieManager {
     public static void resetZombieCount(ServerLevel level) {
         ZombieData data = ZombieData.get(level);
         data.resetZombieCount();
-        LOGGER.info("Zombie count reset to 0");
+        LOGGER.debug("Zombie count reset to 0");
     }
 
     public static String getStatusReport(ServerLevelAccessor level) {
@@ -119,7 +119,7 @@ public class ZombieManager {
         
         ZombieData data = ZombieData.get(serverLevel);
         int zombieCount = data.getZombieCount();
-        int maxZombies = Config.getMaxDaylightZombies();
+        int maxZombies = getZombieCap(serverLevel);
         
         long ticksSinceCap = 0;
         if (data.wasCapReached()) {
@@ -147,12 +147,17 @@ public class ZombieManager {
     public static void onZombieUnloaded(ServerLevel level) {
         ZombieData data = ZombieData.get(level);
         data.decrementZombieCount();
-        LOGGER.debug("Zombie unloaded, active count now: " + data.getZombieCount());
+        LOGGER.debug("Zombie unloaded, active count now: {}", data.getZombieCount());
     }
 
     public static void onZombieLoaded(ServerLevel level) {
         ZombieData data = ZombieData.get(level);
         data.incrementZombieCount();
-        LOGGER.debug("Zombie loaded, active count now: " + data.getZombieCount());
+        LOGGER.debug("Zombie loaded, active count now: {}", data.getZombieCount());
+    }
+
+    private static int getZombieCap(ServerLevel level) {
+        int playerAddedCount = Config.getPerPlayerAdditionalZombies() * level.players().size() + Config.getMinDaylightZombies();
+        return playerAddedCount > Config.getMinDaylightZombies() ? Config.getMaxDaylightZombies() : playerAddedCount;
     }
 } 
